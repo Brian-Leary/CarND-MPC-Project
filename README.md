@@ -2,6 +2,49 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## Project Description
+###Overview
+Model Predictive Control (MPC) is an advanced method of process control which relies on dynamic models of the process. MPC differs from PID controller in that it has the ability to anticipate future events and can take control actions accordingly.
+
+The MPC framework consists of four main components:
+
+* Prediction Horizon (T), or our trajectory, which is the duration of the path we're looking to predict. This is parameterized by a number of time steps N spaced out by a time dt. The number of variables optimized is directly proportional to N, so this must be considered if there are computational limitations to be considered.
+
+* Vehicle Model, which is the set of equations that describes system behavior and updates across time steps. We used a simplified kinematic model (bicycle model) described by a state with six parameters:
+  * x: car's position on the x-axis
+  * y: car's position on the y axis
+  * psi: car's heading/direction
+  * v: car's velocity
+  * cte: cross track error (car's distance from desired path)
+  * epsi: orientation error (difference in car's heading vs desired heading)
+                 
+  Vehicle model equations are implemented in lines 139-144 in main.cpp and updated in lines 146-151 in MPC.cpp.
+
+* Constraints necessary to run the model in a realistic (and hopefully smooth) manner. For example, a car cannot make 90-degree turns so we should construct our model with such limitations in mind.
+  * steering angle/delta: restricted to range [-25°, 25°]
+  * acceleration: restricted to range [-1, 1] (full brake to full throttle)
+
+* Cost Function, which is optimized and stands as the basis of the whole control process. The cost function is not limited to the state (x, y, psi), which gives us cte and epsi. We include a penalty in the cost function for not maintaining a reference velocity ref_v. We also include control inputs (steering angle, acceleration) so as to penalize the magnitude of the input, as well as the change rate.
+
+  The cost function is implemented in lines 70-90 in MPC.cpp.
+  
+###Timestep Length and Elapsed Duration (N and dt)
+N and dt are critical parameters in the optimization process. The product of N and dt gives us the Prediction Horizon (T), which is the window of time for our predictions from the optimization process. Proper tuning requires understanding the following:
+  * Ideally, you'd like T (N * dt) to be as large as possible. But in terms of a moving car, it wouldn't make sense to have T be any longer than a few seconds. Beyond that, conditions have changed too much for predictions to be reliable.
+  * A high dt results in less frequent actuations, which leads to difficulty in keeping up with our reference trajectory. This is known as discretization error, so in an effort to minimize this, we'd like as small a figure as possible for dt.
+  * If we'd like T to be large but dt to be small, that seems to indicate that we're obligated to inflate N as much as possible. In doing so, one should keep in mind that N determines the length of the control inputs vector to be fed into our MPC, i.e. the number of variables that will need to be optimized. This means the higher N gets, the higher the computational cost involved, as previously mentioned.
+
+N (10) and dt (0.1) were chosen for this project with the information above in mind, through trial and error results with the simulator and with some need for pragmatism involved, given the limitations of the hardware I have available to me. Notes on results from different variations are included in the code (MPC.cpp).
+ 
+###Coordinate Systems
+The server returns waypoints using the global coordinate system, which is different from the car's coordinate system. These are transformed in lines 104-111 in main.cpp to make it easier to display them and to calculate cte and epsi values.
+
+###Reference Values and Weightings
+The goal I had in mind was to see a top speed of 100mph reached whilst not leaving the track. A reference value for velocity (ref_v) of 130, with minimal weighting applied to velocity but significant weightings applied to cte, epsi and delta (1, 1500, 2000 and 1000, respectively) just barely achieved this goal. This can be viewed in lines 30-91 in MPC.cpp.
+
+###Model Predictive Control with Latency
+A real car would have a delay in the time between actuations being determined and when they get executed. Considering this, a 100 millisecond delay has been implemented in line 223 of main.cpp, prior to sending data to the simulator. To counter this, the state has been predicted one step ahead, before feeding it to the solver: lines 133-151.
+
 
 ## Dependencies
 
@@ -91,36 +134,3 @@ More information is only accessible by people who are already enrolled in Term 2
 of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/b1ff3be0-c904-438e-aad3-2b5379f0e0c3/concepts/1a2255a0-e23c-44cf-8d41-39b8a3c8264a)
 for instructions and the project rubric.
 
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
