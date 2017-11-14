@@ -3,7 +3,7 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 ## Project Description
-###Overview
+Overview
 Model Predictive Control (MPC) is an advanced method of process control which relies on dynamic models of the process. MPC differs from PID controller in that it has the ability to anticipate future events and can take control actions accordingly.
 
 The MPC framework consists of four main components:
