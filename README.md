@@ -28,7 +28,7 @@ The MPC framework consists of four main components:
 
   The cost function is implemented in lines 70-90 in MPC.cpp.
   
-###Timestep Length and Elapsed Duration (N and dt)
+Timestep Length and Elapsed Duration (N and dt)
 N and dt are critical parameters in the optimization process. The product of N and dt gives us the Prediction Horizon (T), which is the window of time for our predictions from the optimization process. Proper tuning requires understanding the following:
   * Ideally, you'd like T (N * dt) to be as large as possible. But in terms of a moving car, it wouldn't make sense to have T be any longer than a few seconds. Beyond that, conditions have changed too much for predictions to be reliable.
   * A high dt results in less frequent actuations, which leads to difficulty in keeping up with our reference trajectory. This is known as discretization error, so in an effort to minimize this, we'd like as small a figure as possible for dt.
@@ -36,13 +36,13 @@ N and dt are critical parameters in the optimization process. The product of N a
 
 N (10) and dt (0.1) were chosen for this project with the information above in mind, through trial and error results with the simulator and with some need for pragmatism involved, given the limitations of the hardware I have available to me. Notes on results from different variations are included in the code (MPC.cpp).
  
-###Coordinate Systems
+Coordinate Systems
 The server returns waypoints using the global coordinate system, which is different from the car's coordinate system. These are transformed in lines 104-111 in main.cpp to make it easier to display them and to calculate cte and epsi values.
 
-###Reference Values and Weightings
+Reference Values and Weightings
 The goal I had in mind was to see a top speed of 100mph reached whilst not leaving the track. A reference value for velocity (ref_v) of 130, with minimal weighting applied to velocity but significant weightings applied to cte, epsi and delta (1, 1500, 2000 and 1000, respectively) just barely achieved this goal. This can be viewed in lines 30-91 in MPC.cpp.
 
-###Model Predictive Control with Latency
+Model Predictive Control with Latency
 A real car would have a delay in the time between actuations being determined and when they get executed. Considering this, a 100 millisecond delay has been implemented in line 223 of main.cpp, prior to sending data to the simulator. To counter this, the state has been predicted one step ahead, before feeding it to the solver: lines 133-151.
 
 
